@@ -1,0 +1,35 @@
+﻿services:
+  zukya.api:
+    build:
+      context: ./src
+      dockerfile: Zukya.Api/Dockerfile
+    container_name: zukya.api
+    depends_on:
+      zukya.db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__ZukyaDb=Host=zukya.db;Port=5432;Database=zukya_db;Username=zukya_user;Password=zukya_password
+    ports:
+      - "8080:80"
+
+  zukya.db:
+    image: postgis/postgis:16-3.4
+    container_name: zukya.db
+    environment:
+      POSTGRES_DB: zukya_db
+      POSTGRES_USER: zukya_user
+      POSTGRES_PASSWORD: zukya_password
+    ports:
+      - "5600:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zukya_user -d zukya_db"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+volumes:
+  postgres_data:

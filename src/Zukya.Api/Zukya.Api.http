@@ -1,0 +1,6 @@
+@Zukya.Api_HostAddress = http://localhost:5221
+
+GET {{Zukya.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
