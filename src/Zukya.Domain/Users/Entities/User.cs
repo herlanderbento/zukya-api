@@ -13,10 +13,10 @@ public class User : AggregateRoot
     public string? Email { get; private set; }
     public string? Phone { get; private set; }
     public string? Password { get; private set; }
-    public int AccessLevel { get; }
-    public Image Avatar { get; private set; }
-    public UserStatus Status { get; private set; }
-    public string TaxId { get; private set; }
+    public int? AccessLevel { get; }
+    public Image? Avatar { get; private set; }
+    public UserStatus? Status { get; private set; }
+    public string? TaxId { get; private set; }
     public decimal? ReputationScore { get; private set; }
     public string? WarehouseCode { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -32,23 +32,18 @@ public class User : AggregateRoot
         string? email,
         string? phone,
         string? password,
-        int accessLevel,
-        Image avatar,
-        UserStatus status,
-        string taxId,
-        decimal? reputationScore,
-        string? warehouseCode)
+        int? accessLevel,
+        string? taxId)
     {
         Name = name;
         Email = email ?? null;
         Phone = phone ?? null;
         Password = password ?? null;
-        AccessLevel = accessLevel;
-        Avatar = avatar;
-        Status = status;
-        TaxId = taxId;
-        ReputationScore = reputationScore ?? null;
-        WarehouseCode = warehouseCode ?? null;
+        AccessLevel = accessLevel ?? 0;
+        Status = UserStatus.Pending;
+        TaxId = taxId ?? null;
+        ReputationScore = 0;
+        WarehouseCode = null;
 
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
@@ -94,24 +89,21 @@ public class User : AggregateRoot
 
     public void AssignRole(Role role)
     {
-        if (IsAdmin()) throw new EntityValidationException("You cannot assign role to this user.");
+        if (!IsAdmin()) throw new EntityValidationException("Only administrative users can be assigned roles.");
 
-        if (!_roles.Contains(role))
-        {
-            _roles.Add(role);
-            Touch();
-        }
+        if (_roles.Contains(role)) return;
+        _roles.Add(role);
+        Touch();
     }
 
     public void RemoveRole(Role role)
     {
-        if (IsAdmin()) throw new EntityValidationException("You cannot remove role from this user.");
+        if (!IsAdmin()) throw new EntityValidationException("Only administrative users can manage roles.");
 
-        if (_roles.Contains(role))
-        {
-            _roles.Remove(role);
-            Touch();
-        }
+        if (!_roles.Contains(role)) return;
+
+        _roles.Remove(role);
+        Touch();
     }
 
     private bool IsAdmin() => AccessLevel == 5;

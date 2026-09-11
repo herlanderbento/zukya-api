@@ -1,53 +1,79 @@
-using Scalar.AspNetCore;
+using DotNetEnv;
+using Microsoft.AspNetCore.HttpLogging;
+using Zukya.Api.Shared.Configurations;
 
-var builder = WebApplication.CreateBuilder(args);
+Env.Load();
 
-builder.Services.AddOpenApi();
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var app = builder.Build();
+builder
+    .Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", true, true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+    .AddEnvironmentVariables();
 
-if (app.Environment.IsDevelopment())
+ConfigurationManager configuration = builder.Configuration;
+
+var connectionString = configuration.GetConnectionString("ZukyaDb");
+if (!string.IsNullOrEmpty(connectionString))
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    connectionString = connectionString
+        .Replace("${DB_HOST}", Environment.GetEnvironmentVariable("DB_HOST"))
+        .Replace("${DB_PORT}", Environment.GetEnvironmentVariable("DB_PORT"))
+        .Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME"))
+        .Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER"))
+        .Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD"));
+
+    configuration["ConnectionStrings:ZukyaDb"] = connectionString;
 }
 
-app.UseHttpsRedirection();
+configuration["Jwt:PrivateKey"] = Environment.GetEnvironmentVariable("JWT_PRIVATE_KEY") ?? configuration["Jwt:PrivateKey"];
+configuration["Jwt:PublicKey"] = Environment.GetEnvironmentVariable("JWT_PUBLIC_KEY") ?? configuration["Jwt:PublicKey"];
+configuration["Jwt:SecretKey"] = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? configuration["Jwt:SecretKey"];
+configuration["Jwt:Issuer"] = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "Zukya";
+configuration["Jwt:Audience"] = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "Zukya";
 
-var summaries = new[]
-{
-    "Freezing",
-    "Bracing",
-    "Chilly",
-    "Cool",
-    "Mild",
-    "Warm",
-    "Balmy",
-    "Hot",
-    "Sweltering",
-    "Scorching",
-};
+configuration["Storage:AccessKey"] = Environment.GetEnvironmentVariable("STORAGE_ACCESS_KEY");
+configuration["Storage:SecretKey"] = Environment.GetEnvironmentVariable("STORAGE_SECRET_KEY");
+configuration["Storage:BucketName"] = Environment.GetEnvironmentVariable("STORAGE_BUCKET_NAME");
+configuration["Storage:EndpointUrl"] = Environment.GetEnvironmentVariable("STORAGE_ENDPOINT_URL");
+configuration["Storage:PublicUrl"] = Environment.GetEnvironmentVariable("STORAGE_PUBLIC_URL");
 
-app.MapGet(
-        "/weatherforecast",
-        () =>
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services
+    .AddAppConnections(configuration)
+    .AddSecurity(configuration)
+    .AddUseCases()
+    .AddStorage(configuration)
+    .AddAndConfigureControllers()
+    .AddCors(options =>
+    {
+        options.AddPolicy("CORS", policy =>
         {
-            var forecast = Enumerable
-                .Range(1, 5)
-                .Select(index => new WeatherForecast(
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-                .ToArray();
-            return forecast;
-        }
-    )
-    .WithName("GetWeatherForecast");
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        });
+    })
+    .AddHttpLogging(logging =>
+    {
+        logging.LoggingFields = HttpLoggingFields.All;
+        logging.RequestBodyLogLimit = 4096;
+        logging.ResponseBodyLogLimit = 4096;
+    })
+    .AddAuthorization()
+    .AddMemoryCache();
+
+WebApplication app = builder.Build();
+
+app.UseHttpLogging();
+app.UseDocumentation();
+app.UseCors("CORS");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+public partial class Program;

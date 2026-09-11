@@ -33,4 +33,9 @@
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Services\Email\"/>
+        <Folder Include="Services\Messaging\"/>
+    </ItemGroup>
+
 </Project>

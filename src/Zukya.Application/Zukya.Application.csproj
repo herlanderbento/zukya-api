@@ -17,4 +17,8 @@
       <ProjectReference Include="..\Zukya.Domain\Zukya.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="UseCases\"/>
+    </ItemGroup>
+
 </Project>

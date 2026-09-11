@@ -1,0 +1,75 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Zukya.Domain.Roles.Entities;
+using Zukya.Domain.Shared.Entities;
+using Zukya.Domain.Shared.Events;
+using Zukya.Domain.Users.Entities;
+using Zukya.Infra.Persistence.Modules.Roles;
+using Zukya.Infra.Persistence.Modules.Users.Configurations;
+
+namespace Zukya.Infra.Persistence;
+
+public class DatabaseContext(DbContextOptions options) : DbContext(options)
+{
+    public DbSet<User> Users => Set<User>();
+    public DbSet<VerificationCode> VerificationCode => Set<VerificationCode>();
+    public DbSet<Permission> Permission => Set<Permission>();
+    public DbSet<Role> Role => Set<Role>();
+
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());
+        modelBuilder.ApplyConfiguration(new PermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new RoleConfiguration());
+
+        modelBuilder.Ignore<DomainEvent>();
+
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
+            if (typeof(Entity).IsAssignableFrom(entityType.ClrType))
+                modelBuilder.Entity(entityType.ClrType)
+                    .Property("Id")
+                    .ValueGeneratedNever();
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(DatabaseContext).Assembly);
+        base.OnModelCreating(modelBuilder);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        NormalizeDateTimes();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        NormalizeDateTimes();
+        return base.SaveChanges();
+    }
+
+    private void NormalizeDateTimes()
+    {
+        IEnumerable<EntityEntry> entries = ChangeTracker
+            .Entries()
+            .Where(e =>
+            {
+                if (e.State == EntityState.Added) return true;
+                return e.State == EntityState.Modified;
+            });
+
+        foreach (EntityEntry entry in entries)
+        foreach (PropertyEntry property in entry.Properties)
+        {
+            if (property.Metadata.ClrType != typeof(DateTime) || property.CurrentValue == null) continue;
+            var dateTime = (DateTime)property.CurrentValue;
+            property.CurrentValue = dateTime.Kind switch
+            {
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
+                DateTimeKind.Local => dateTime.ToUniversalTime(),
+                _ => property.CurrentValue
+            };
+        }
+    }
+}
