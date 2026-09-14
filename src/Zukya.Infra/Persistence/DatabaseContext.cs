@@ -5,9 +5,8 @@ using Zukya.Domain.Roles.Entities;
 using Zukya.Domain.Shared.Entities;
 using Zukya.Domain.Shared.Events;
 using Zukya.Domain.Users.Entities;
-using Zukya.Infra.Persistence.Modules.Roles;
-using Zukya.Infra.Persistence.Modules.Users.Configurations;
-
+using Zukya.Domain.Users.Enums;
+using DomainEntity = Zukya.Domain.SystemSetting.Entities;
 namespace Zukya.Infra.Persistence;
 
 public class DatabaseContext(DbContextOptions options) : DbContext(options)
@@ -16,15 +15,17 @@ public class DatabaseContext(DbContextOptions options) : DbContext(options)
     public DbSet<VerificationCode> VerificationCode => Set<VerificationCode>();
     public DbSet<Permission> Permission => Set<Permission>();
     public DbSet<Role> Role => Set<Role>();
-
+    public DbSet<DomainEntity.SystemSetting> SystemSettings => Set<DomainEntity.SystemSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new UserConfiguration());
-        modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());
-        modelBuilder.ApplyConfiguration(new PermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new RoleConfiguration());
-
+        modelBuilder.Entity<User>()
+            .Property(e => e.Status)
+            .HasConversion(
+                v => v.ToString()!.ToLower(),
+                v => Enum.Parse<UserStatus>(v, true)
+            );
+        
         modelBuilder.Ignore<DomainEvent>();
 
         foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
@@ -36,7 +37,7 @@ public class DatabaseContext(DbContextOptions options) : DbContext(options)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DatabaseContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
-
+    
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         NormalizeDateTimes();

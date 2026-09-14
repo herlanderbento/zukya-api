@@ -2,9 +2,10 @@
 
 public class UnauthorizedException(string? message) : ApplicationException(message)
 {
-    public static void Throw(string exceptionMessage)
+    public static void ThrowIfNull(object? @object, string exceptionMessage)
     {
-        throw new UnauthorizedException(exceptionMessage);
+        if (@object is null)
+            throw new UnauthorizedException(exceptionMessage);
     }
 
     public static void ThrowIfFalse(bool condition, string exceptionMessage)

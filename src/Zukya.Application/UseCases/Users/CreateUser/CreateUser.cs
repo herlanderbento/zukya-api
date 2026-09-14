@@ -38,6 +38,7 @@ public class CreateUser : ICreateUser
                 input.Email,
                 cancellationToken
             );
+            
             ConflictException.ThrowIfNotNull(
                 userWithSameEmail,
                 $"Email '{input.Email}' is already registered."
@@ -62,14 +63,16 @@ public class CreateUser : ICreateUser
             input.Phone,
             hashedPassword,
             input.Role == UserRole.Seller ? 1 : 0,
-            input.TaxId);
+            input.TaxId
+        );
 
         await userRepository.Insert(user, cancellationToken);
 
         var code = VerificationCode.Create(
             user.Id,
             VerificationType.AccountVerification,
-            TimeSpan.FromMinutes(15));
+            TimeSpan.FromMinutes(15)
+        );
 
         await verificationCodeRepository.Insert(code, cancellationToken);
 
@@ -79,6 +82,7 @@ public class CreateUser : ICreateUser
 
         return new UserTokenOutput(
             token.AccessToken,
-            UserOutput.ToOutput(user));
+            UserOutput.ToOutput(user)
+        );
     }
 }

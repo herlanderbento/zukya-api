@@ -49,6 +49,7 @@ builder.Services
     .AddUseCases()
     .AddStorage(configuration)
     .AddAndConfigureControllers()
+    .AddMemoryCache()
     .AddCors(options =>
     {
         options.AddPolicy("CORS", policy =>
@@ -62,7 +63,6 @@ builder.Services
         logging.RequestBodyLogLimit = 4096;
         logging.ResponseBodyLogLimit = 4096;
     })
-    .AddAuthorization()
     .AddMemoryCache();
 
 WebApplication app = builder.Build();

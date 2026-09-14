@@ -2,10 +2,13 @@
 using Zukya.Application.Common.Behaviors;
 using Zukya.Application.Common.Events;
 using Zukya.Application.Common.Interfaces;
+using Zukya.Application.UseCases.Users.Authenticate;
 using Zukya.Application.UseCases.Users.CreateUser;
 using Zukya.Domain.Shared.Events;
+using Zukya.Domain.SystemSetting.Repositories;
 using Zukya.Domain.Users.Repositories;
 using Zukya.Infra.Persistence;
+using Zukya.Infra.Persistence.Modules.SystemSetting.Repositories;
 using Zukya.Infra.Persistence.Modules.Users.Repositories;
 using Zukya.Infra.Services.Auth;
 
@@ -35,6 +38,7 @@ public static class UseCasesConfiguration
         // Repositories
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IVerificationCodeRepository, VerificationCodeRepository>();
+        services.AddTransient<ISystemSettingRepository, SystemSettingRepository>();
         // Unit of work
         services.AddTransient<IUnitOfWork, UnitOfWork>();
         // Providers
@@ -50,6 +54,7 @@ public static class UseCasesConfiguration
     {
         // User validators
         services.AddValidatorsFromAssemblyContaining<CreateUserInputValidator>();
+        services.AddValidatorsFromAssemblyContaining<AuthenticateInputValidator>();
         return services;
     }
 

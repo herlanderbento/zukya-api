@@ -71,6 +71,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(50)
             .HasDefaultValue(null);
 
+        builder.Property(u => u.FailedLoginAttempts)
+            .HasColumnName("failed_login_attempts")
+            .HasDefaultValue(0)
+            .IsRequired();
+
         builder.Property(x => x.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

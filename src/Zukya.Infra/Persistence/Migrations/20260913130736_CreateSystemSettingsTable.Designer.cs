@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Zukya.Infra.Persistence;
@@ -11,9 +12,11 @@ using Zukya.Infra.Persistence;
 namespace Zukya.Infra.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20260913130736_CreateSystemSettingsTable")]
+    partial class CreateSystemSettingsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,7 +120,7 @@ namespace Zukya.Infra.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -136,7 +139,7 @@ namespace Zukya.Infra.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("type");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -153,21 +156,21 @@ namespace Zukya.Infra.Persistence.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTime(2026, 9, 13, 13, 7, 34, 908, DateTimeKind.Utc).AddTicks(2216),
                             Description = "Habilita/Desabilita banimento automatico por tentativas excessivas de login",
                             Key = "security.auto_banned_on_failed_login.enabled",
                             Type = "boolean",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedAt = new DateTime(2026, 9, 13, 13, 7, 34, 908, DateTimeKind.Utc).AddTicks(2218),
                             Value = "true"
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTime(2026, 9, 13, 13, 7, 34, 908, DateTimeKind.Utc).AddTicks(4060),
                             Description = "Numero maximo de tentativas falhadas antes de banir a conta",
                             Key = "security.max_failed_login_attempts",
                             Type = "int",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedAt = new DateTime(2026, 9, 13, 13, 7, 34, 908, DateTimeKind.Utc).AddTicks(4061),
                             Value = "5"
                         });
                 });

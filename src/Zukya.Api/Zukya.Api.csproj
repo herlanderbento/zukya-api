@@ -30,8 +30,4 @@
       <ProjectReference Include="..\Zukya.Infra\Zukya.Infra.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="Modules\Users\Inputs\"/>
-    </ItemGroup>
-
 </Project>

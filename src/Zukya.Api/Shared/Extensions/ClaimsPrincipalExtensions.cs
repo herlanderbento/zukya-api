@@ -1,23 +1,35 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Zukya.Application.Common.Exceptions;
+﻿using System.Security.Claims;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Zukya.Api.Shared.Configurations;
 
 namespace Zukya.Api.Shared.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static Guid GetUserId(this ClaimsPrincipal? claimsPrincipal)
+    public static Guid? GetUserId(this ClaimsPrincipal? user)
     {
-        if (claimsPrincipal?.Identity?.IsAuthenticated != true)
-            throw new UnauthorizedException("Authentication required.");
+        if (user == null)
+            return null;
 
-        Claim? userIdClaim =
-            claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)
-            ?? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sub);
+        var claim = user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                    ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
-            throw new UnauthorizedException("User ID not found in token.");
+        if (string.IsNullOrWhiteSpace(claim))
+            return null;
 
-        return userId;
+        return Guid.TryParse(claim, out Guid id) ? id : null;
+    }
+
+    public static int GetUserRole(this ClaimsPrincipal? user)
+    {
+        if (user == null)
+            return AccessLevels.Client;
+
+        var claim = user.FindFirst("role")?.Value;
+
+        if (string.IsNullOrWhiteSpace(claim))
+            return AccessLevels.Client;
+
+        return int.TryParse(claim, out var role) ? role : AccessLevels.Client;
     }
 }

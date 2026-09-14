@@ -26,10 +26,28 @@ public class ApiGlobalExceptionFilter(IHostEnvironment env) : IExceptionFilter
                 details.Type = "NotFound";
                 details.Detail = exception.Message;
                 break;
+            case BadRequestException:
+                details.Title = "Bad Request";
+                details.Status = StatusCodes.Status400BadRequest;
+                details.Type = "BadRequest";
+                details.Detail = exception.Message;
+                break;
             case ConflictException:
                 details.Title = "Conflict";
                 details.Status = StatusCodes.Status409Conflict;
                 details.Type = "Conflict";
+                details.Detail = exception.Message;
+                break;
+            case UnauthorizedException:
+                details.Title = "Unauthorized";
+                details.Status = StatusCodes.Status401Unauthorized;
+                details.Type = "Unauthorized";
+                details.Detail = exception.Message;
+                break;
+            case ForbiddenException:
+                details.Title = "Forbidden";
+                details.Status = StatusCodes.Status403Forbidden;
+                details.Type = "Forbidden";
                 details.Detail = exception.Message;
                 break;
             default:

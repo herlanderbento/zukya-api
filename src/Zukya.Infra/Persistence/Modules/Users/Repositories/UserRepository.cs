@@ -80,12 +80,26 @@ public class UserRepository(DatabaseContext context) : IUserRepository
         var toSkip = (input.Page - 1) * input.PerPage;
         IQueryable<User> query = Users.AsNoTracking();
 
+        
         query = AddOrderToQuery(query, input.OrderBy, input.Order);
+        
         if (!string.IsNullOrWhiteSpace(input.Search))
-            query = query.Where(x => EF.Functions.Like(x.Name, $"%{input.Search}%"));
+        {
+            var searchTerm = $"%{input.Search}%";
+
+            query = query.Where(x =>
+                x.Name.Contains(searchTerm) ||
+                x.Email!.Contains(searchTerm) ||
+                x.Phone!.Contains(searchTerm) ||
+                (x.TaxId != null && EF.Functions.Like(x.TaxId, searchTerm))
+            );
+        }
 
         var total = await query.CountAsync(cancellationToken);
-        List<User> items = await query.Skip(toSkip).Take(input.PerPage).ToListAsync(cancellationToken);
+        List<User> items = await query
+            .Skip(toSkip)
+            .Take(input.PerPage)
+            .ToListAsync(cancellationToken);
 
         return new SearchOutput<User>(input.Page, input.PerPage, total, items);
     }
